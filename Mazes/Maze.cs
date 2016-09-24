@@ -10,6 +10,8 @@ namespace Mazes
 {
     class Room
     {
+        public int col_, row_;
+        public Room(int col, int row) { row_ = row; col_ = col; }
         public Image Draw(Pen p)
         {
             Bitmap img = new Bitmap(11, 11);
@@ -42,7 +44,13 @@ namespace Mazes
         public void DrawDot(Graphics g)
         {
             Pen p = new Pen(Color.Chocolate);
-
+            Point[] dot_points = new Point[5];
+            dot_points[0] = new Point(5, 5 - 2);
+            dot_points[1] = new Point(5 + 2, 5);
+            dot_points[2] = new Point(5, 5 + 2);
+            dot_points[3] = new Point(5 - 2, 5);
+            dot_points[4] = new Point(5, 5 - 2);
+            g.FillClosedCurve(Brushes.Chocolate, dot_points);
         }
 
         Boolean visited_;
@@ -105,17 +113,20 @@ namespace Mazes
 
     class Maze
     {
+
+        Room current_room_;
         UInt32 rows_, cols_;
         public Maze(UInt32 cols, UInt32 rows)
         {
             cols_ = cols;
             rows_ = rows;
             rooms = new Room[cols, rows];
+            current_room_ = rooms[0, 0];
             for (int col = 0; col < cols; col++)
             {
                 for (int row = 0; row < rows; row++)
                 {
-                    rooms[col, row] = new Mazes.Room();
+                    rooms[col, row] = new Mazes.Room(col, row);
                 }
             }
             for (int col = 0; col < cols - 1; col++)
@@ -184,7 +195,8 @@ namespace Mazes
                             prev_room = room;
                             room = room.North;
 
-                        } else
+                        }
+                        else
                         {
                             if (room.East != null && room.East != prev_room)
                             {
@@ -201,7 +213,8 @@ namespace Mazes
                             room.OpenEast = true;
                             prev_room = room;
                             room = room.East;
-                        } else
+                        }
+                        else
                         {
                             if (room.North != null && room.North != prev_room)
                             {
