@@ -15,10 +15,10 @@ namespace Mazes
             Bitmap img = new Bitmap(11, 11);
             Graphics g = Graphics.FromImage(img);
             Brush b = Brushes.Black;
-            g.FillRectangle(b, 0, 0, 1,1);
-            g.FillRectangle(b, 0, 10, 1,1);
-            g.FillRectangle(b, 10, 0, 1,1);
-            g.FillRectangle(b, 10, 10, 1,1);
+            g.FillRectangle(b, 0, 0, 1, 1);
+            g.FillRectangle(b, 0, 10, 1, 1);
+            g.FillRectangle(b, 10, 0, 1, 1);
+            g.FillRectangle(b, 10, 10, 1, 1);
 
             if (!open_west_)
             {
@@ -42,7 +42,14 @@ namespace Mazes
         public void DrawDot(Graphics g)
         {
             Pen p = new Pen(Color.Chocolate);
-            
+
+        }
+
+        Boolean visited_;
+        public Boolean Visited
+        {
+            get { return visited_; }
+            set { visited_ = value; }
         }
 
         Room north_ = null, south_ = null, east_ = null, west_ = null;
@@ -113,54 +120,116 @@ namespace Mazes
             }
             for (int col = 0; col < cols - 1; col++)
             {
-                for (int row = 0; row < rows - 1; row++)
+                for (int row = 0; row < rows; row++)
                 {
-                    rooms[col, row].South = rooms[col, row + 1];
+                    if (row < rows - 1)
+                    {
+                        rooms[col, row].South = rooms[col, row + 1];
+                    }
                     rooms[col, row].East = rooms[col + 1, row];
                 }
             }
-            //RandomWalk(rooms, cols, rows);
+            RandomWalk();
         }
         Room[,] rooms;
 
-        void RandomWalk(Room[,] rooms, UInt64 numx, UInt64 numy)
+        Random r = new Random(42);
+        Room GetRandomUnvisitedRoom()
         {
-            UInt64 x = 0;
-            UInt64 y = 0;
-            Random r = new Random(42);
-            for (UInt64 i = 0; i < 800; ++i){
-                Int64 ri = r.Next(0, 4);
-                if (ri == 0)
+            List<Room> unvisited_rooms = new List<Room>();
+            for (int col = 0; col < cols_; ++col)
+            {
+                for (int row = 0; row < rows_; ++row)
                 {
-                    if (rooms[x, y].North != null)
+                    if (rooms[col, row].Visited == false)
                     {
-                        rooms[x, y].OpenNorth = true;
-                        y -= 1;
+                        unvisited_rooms.Add(rooms[col, row]);
                     }
                 }
-                if (ri == 1)
+            }
+            Debug.WriteLine("Unvisited count: {0}", unvisited_rooms.Count);
+            if (unvisited_rooms.Count() == 0)
+            {
+                return null;
+            }
+
+            return unvisited_rooms.ElementAt(r.Next(0, unvisited_rooms.Count));
+        }
+
+        void RandomWalk()
+        {
+            uint start_col = 0;
+            uint start_row = rows_ - 1;
+            Room room = rooms[start_col, start_row];
+            Room prev_room = room;
+            while (true)
+            {
+                if (room.Visited == true)
                 {
-                    if (rooms[x, y].South != null)
+                    room = GetRandomUnvisitedRoom();
+                    prev_room = room;
+                    if (room == null)
                     {
-                        rooms[x, y].OpenSouth = true;
-                        y += 1;
+                        break;
                     }
                 }
-                if (ri == 2)
+                room.Visited = true;
+                switch (r.Next(0, 2))
                 {
-                    if (rooms[x, y].West != null)
-                    {
-                        rooms[x, y].OpenWest = true;
-                        x -= 1;
-                    }
-                }
-                if (ri == 3)
-                {
-                    if (rooms[x, y].East != null)
-                    {
-                        rooms[x, y].OpenEast = true;
-                        x += 1;
-                    }
+                    case 0:
+                        // North
+                        if (room.North != null && room.North != prev_room)
+                        {
+                            room.OpenNorth = true;
+                            prev_room = room;
+                            room = room.North;
+
+                        } else
+                        {
+                            if (room.East != null && room.East != prev_room)
+                            {
+                                room.OpenEast = true;
+                                prev_room = room;
+                                room = room.East;
+                            }
+                        }
+                        break;
+                    case 1:
+                        // East
+                        if (room.East != null && room.East != prev_room)
+                        {
+                            room.OpenEast = true;
+                            prev_room = room;
+                            room = room.East;
+                        } else
+                        {
+                            if (room.North != null && room.North != prev_room)
+                            {
+                                room.OpenNorth = true;
+                                prev_room = room;
+                                room = room.North;
+
+                            }
+                        }
+                        break;
+                    case 2:
+                        // South
+                        if (room.South != null && room.South != prev_room)
+                        {
+                            room.OpenSouth = true;
+                            prev_room = room;
+                            room = room.South;
+                        }
+                        break;
+                    case 3:
+                        // West
+                        if (room.West != null && room.West != prev_room)
+                        {
+                            room.OpenWest = true;
+                            prev_room = room;
+                            room = room.West;
+                        }
+                        break;
                 }
             }
         }
