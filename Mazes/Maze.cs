@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -97,25 +98,28 @@ namespace Mazes
 
     class Maze
     {
-        public Maze()
+        UInt32 rows_, cols_;
+        public Maze(UInt32 cols, UInt32 rows)
         {
-            rooms = new Room[10, 10];
-            for (int i = 0; i < 10; i++)
+            cols_ = cols;
+            rows_ = rows;
+            rooms = new Room[cols, rows];
+            for (int col = 0; col < cols; col++)
             {
-                for (int j = 0; j < 10; j++)
+                for (int row = 0; row < rows; row++)
                 {
-                    rooms[i, j] = new Mazes.Room();
+                    rooms[col, row] = new Mazes.Room();
                 }
             }
-            for (int i = 0; i < 9; i++)
+            for (int col = 0; col < cols - 1; col++)
             {
-                for (int j = 0; j < 9; j++)
+                for (int row = 0; row < rows - 1; row++)
                 {
-                    rooms[i, j].South = rooms[i, j + 1];
-                    rooms[i, j].East = rooms[i+1, j];
+                    rooms[col, row].South = rooms[col, row + 1];
+                    rooms[col, row].East = rooms[col + 1, row];
                 }
             }
-            RandomWalk(rooms, 10, 10);
+            //RandomWalk(rooms, cols, rows);
         }
         Room[,] rooms;
 
@@ -158,26 +162,23 @@ namespace Mazes
                         x += 1;
                     }
                 }
-
-
             }
-
         }
 
         public Image Draw()
         {
             Pen p = new Pen(Color.Black, 1);
-            Bitmap img = new Bitmap(101, 101);
+            Bitmap img = new Bitmap((int)cols_ * 10 + 1, (int)rows_ * 10 + 1);
             Graphics g = Graphics.FromImage(img);
-
-            for (int i = 0; i < 10; i++)
+            for (int col = 0; col < cols_; col++)
             {
-                for (int j = 0; j < 10; j++)
+                for (int row = 0; row < rows_; row++)
                 {
-                    g.DrawImage(rooms[i, j].Draw(p), i * 10, j * 10);
+                    g.DrawImage(rooms[col, row].Draw(p), col * 10, row * 10);
+                    Debug.WriteLine("I: {0}, J:{1}", col, row);
                 }
             }
-            
+            Debug.WriteLine("Height: {0} Width: {1}", img.Height, img.Width);
             g.Flush();
             return img;
         }
